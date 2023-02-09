@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Finder App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script>
+      async function findStock() {
+          let symbol = document.getElementById('searchStock').value;
+
+          // Call to alpha vantage api.
+          let result = await fetch('http://localhost:8080/stock?symbol='+symbol);
+          result = await result.json();
+
+          // Error handling check.
+          if(result['Error Message'] == 'Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for TIME_SERIES_WEEKLY.'){
+              document.getElementById("errorMessage").innerHTML = 'You have provided invalid stock symbol. Please provide valid stock symbol.';
+              document.getElementById("errorMessage").style.visibility="visible";
+              document.getElementById("errorMessage").style.marginLeft="10px";
+              document.getElementById("errorMessage").style.display="inline-block";
+              return;
+          }
+
+          // Prepare dynamic table from api response.
+          console.warn(result);
+          $('#stockName').html('');
+          $('#stockName').append(`<h4>Weekly Data For: ${result['Meta Data']['2. Symbol']}</h4>`);
+          var stockArray = [];
+          for (var i in result['Weekly Time Series']) {
+              stockArray.push([i, result['Weekly Time Series'][i]]);
+          }
+          var stockDataHtml = "";
+          for(var i=0;i<stockArray.length;i++){
+              stockDataHtml += "<tr>";
+              stockDataHtml += "<td>"+ stockArray[i][0] + "</td>";
+              stockDataHtml += "<td>"+ stockArray[i][1]['1. open'] + "</td>";
+              stockDataHtml += "<td>"+ stockArray[i][1]['4. close'] + "</td>";
+              stockDataHtml += "<td>"+ stockArray[i][1]['2. high'] + "</td>";
+              stockDataHtml += "<td>"+ stockArray[i][1]['3. low'] + "</td>";
+              stockDataHtml += "<td>"+ stockArray[i][1]['5. volume'] + "</td>";
+              stockDataHtml += "</tr>";
+
+          }
+          $('.stockDataBody').html('');
+          $('.stockDataBody').append(stockDataHtml);
+          document.getElementById("downloadLink").style.visibility="visible";
+      }
+    </script>
+</head>
+<body>
+<div style="display: inline">
+    <input placeholder="IBM or TSCO" style="margin-left: 10px;margin-top: 10px;" type="search" id="searchStock"><button onclick="findStock()">Search</button>
+    <p id="errorMessage" style="visibility: hidden"></p>
+    <hr width="100%" />
+    <div id="stockName" style="margin-left:10px;display: inline-block;"></div><a style="visibility: hidden;display: inline-block;vertical-align: text-bottom;margin-left: 5px;" id="downloadLink" href="http://localhost:8080/downloadCSV?symbol=IBM" download="stock.csv">Download</a>
+</div>
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th scope="col">Week</th>
+        <th scope="col">Open</th>
+        <th scope="col">Close</th>
+        <th scope="col">High</th>
+        <th scope="col">Low</th>
+        <th scope="col">Volume</th>
+    </tr>
+    </thead>
+    <tbody class="stockDataBody"></tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
